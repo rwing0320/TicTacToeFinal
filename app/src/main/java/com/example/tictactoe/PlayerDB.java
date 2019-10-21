@@ -72,14 +72,13 @@ public class PlayerDB {
         ArrayList<HashMap<String, String>> data =
                 new ArrayList<HashMap<String, String>>();
         openReadableDB();
-        Cursor cursor = db.rawQuery("SELECT name, wins, losses, ties, gamewins FROM players",null );
+        Cursor cursor = db.rawQuery("SELECT name, wins, losses, ties FROM players ORDER BY wins DESC",null );
         while (cursor.moveToNext()) {
             HashMap<String, String> map = new HashMap<String, String>();
             map.put("name", cursor.getString(0));
             map.put("wins", cursor.getString(1));
             map.put("losses", cursor.getString(2));
             map.put("ties", cursor.getString(3));
-            map.put("gamewins", cursor.getString(3));
             data.add(map);
         }
         if (cursor != null)
@@ -88,6 +87,24 @@ public class PlayerDB {
 
         return data;
     }
+
+    ArrayList<HashMap<String, String>> getPlayerNames(){
+        ArrayList<HashMap<String, String>> data =
+                new ArrayList<HashMap<String, String>>();
+        openReadableDB();
+        Cursor cursor = db.rawQuery("SELECT name FROM players",null );
+        while (cursor.moveToNext()) {
+            HashMap<String, String> map = new HashMap<String, String>();
+            map.put("name", cursor.getString(0));
+            data.add(map);
+        }
+        if (cursor != null)
+            cursor.close();
+        closeDB();
+
+        return data;
+    }
+
 
     String getPlayer(){
         ArrayList<HashMap<String, String>> data =
@@ -98,18 +115,63 @@ public class PlayerDB {
         while (cursor.moveToNext()) {
 
             name = cursor.getString(0);
-//            HashMap<String, String> map = new HashMap<String, String>();
-//            map.put("name", cursor.getString(0));
-//            map.put("wins", cursor.getString(1));
-//            map.put("losses", cursor.getString(2));
-//            map.put("ties", cursor.getString(3));
-//            data.add(map);
         }
         if (cursor != null)
             cursor.close();
         closeDB();
 
         return name;
+    }
+
+    int getPlayerWins(String name){
+        ArrayList<HashMap<String, String>> data =
+                new ArrayList<HashMap<String, String>>();
+        int wins = 0;
+        openReadableDB();
+        Cursor cursor = db.rawQuery("SELECT wins FROM players WHERE name == '" + name + "'",null );
+        while (cursor.moveToNext()) {
+
+            wins = cursor.getInt(0);
+        }
+        if (cursor != null)
+            cursor.close();
+        closeDB();
+
+        return wins;
+    }
+
+    int getPlayerLosses(String name){
+        ArrayList<HashMap<String, String>> data =
+                new ArrayList<HashMap<String, String>>();
+        int losses = 0;
+        openReadableDB();
+        Cursor cursor = db.rawQuery("SELECT losses FROM players WHERE  name == '" + name + "'",null );
+        while (cursor.moveToNext()) {
+
+            losses = cursor.getInt(0);
+        }
+        if (cursor != null)
+            cursor.close();
+        closeDB();
+
+        return losses;
+    }
+
+    int getPlayerTies(String name){
+        ArrayList<HashMap<String, String>> data =
+                new ArrayList<HashMap<String, String>>();
+        int ties = 0;
+        openReadableDB();
+        Cursor cursor = db.rawQuery("SELECT ties FROM players WHERE  name == '" + name + "'",null );
+        while (cursor.moveToNext()) {
+
+            ties = cursor.getInt(0);
+        }
+        if (cursor != null)
+            cursor.close();
+        closeDB();
+
+        return ties;
     }
 
     boolean checkPlayer(String playerName){
@@ -131,6 +193,25 @@ public class PlayerDB {
         return isFound;
     }
 
+    boolean checkForPlayers(){
+        boolean isFound = true;
+
+        openReadableDB();
+        Cursor cursor = db.rawQuery("SELECT name FROM players",null );
+
+        if(cursor.getCount() <= 1){
+
+            isFound = false;
+        }
+        if (cursor != null){
+            cursor.close();
+        }
+
+        closeDB();
+
+        return isFound;
+    }
+
     void insertPlayer(String sName)throws Exception{
 
         openWriteableDB();
@@ -138,6 +219,31 @@ public class PlayerDB {
         content.put("name", sName);
         long nResult = db.insert("players",null, content);
         if(nResult == -1) throw new Exception("no data");
+        closeDB();
+    }
+
+    void updatePlayerWins(int wins, String name){
+        //String strFilter = "_id=" + Id;
+        openWriteableDB();
+        ContentValues content = new ContentValues();
+        content.put("wins", wins);
+        db.update("players", content, "name = '" + name + "'", null);
+        closeDB();
+    }
+
+    void updatePlayerLosses(int losses, String name){
+        openWriteableDB();
+        ContentValues content = new ContentValues();
+        content.put("losses", losses);
+        db.update("players", content, "name = '" + name + "'", null);
+        closeDB();
+    }
+
+    void updatePlayerTies(int ties, String name){
+        openWriteableDB();
+        ContentValues content = new ContentValues();
+        content.put("ties", ties);
+        db.update("players", content, "name = '" + name + "'", null);
         closeDB();
     }
 }

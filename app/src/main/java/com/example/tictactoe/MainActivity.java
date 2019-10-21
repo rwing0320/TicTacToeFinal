@@ -1,6 +1,8 @@
 package com.example.tictactoe;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -17,7 +19,9 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -65,6 +69,12 @@ public class MainActivity extends AppCompatActivity {
     TextView player1Text;
     TextView player2Text;
 
+    final Context gameContext = this;
+
+    private PlayerDB db;
+
+    boolean changedPage = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,10 +83,11 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
+        final String playerOneName = getIntent().getStringExtra("player1Name");
+        final String playerTwoName = getIntent().getStringExtra("player2Name");
         //Set variable values for variable strings, arrays, and Views
-        players[0] = "Player 1";
-        players[1] = "Player 2";
+        players[0] = playerOneName;
+        players[1] = playerTwoName;
 
         playerTurn = players[0];
 
@@ -94,11 +105,13 @@ public class MainActivity extends AppCompatActivity {
         // get SharedPreferences object
         savedValues = getSharedPreferences("SavedValues", MODE_PRIVATE);
 
+        db = new PlayerDB(this);
+
 
         //Call showWinningString to set TextView of the number of games the user is on out of 3
         showWinningStrings();
 
-
+        restartGame();
         //Call the startGame function
         startGame();
 
@@ -182,6 +195,8 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("isCatsGame", isCatsGame);
         editor.putString("player1", players[0]);
         editor.putString("player2", players[1]);
+        editor.putBoolean("changedPage", changedPage);
+
 
 
         editor.commit();
@@ -200,53 +215,59 @@ public class MainActivity extends AppCompatActivity {
         //get all of the variables saves in onSaveInstanceState
         if(savedValues != null) {
             try {
+                changedPage = savedValues.getBoolean("changedPage", false);
 
-                player1Text = findViewById(R.id.textView);
-                player2Text = findViewById(R.id.textView2);
+                if(changedPage == false) {
 
-                player1Text.setText(players[0]);
-                player2Text.setText(players[1]);
+                    db = new PlayerDB(this);
 
+                    player1Text = findViewById(R.id.textView);
+                    player2Text = findViewById(R.id.textView2);
 
-                newJsonArray = new JSONArray(savedValues.getString("newJSONArray", ""));
-                myButtons = new JSONArray(savedValues.getString("myButtons", ""));
-
-                players = new String[2];
-                players[0] = savedValues.getString("player1", "");
-                players[1] = savedValues.getString("player2", "");
+                    player1Text.setText(players[0]);
+                    player2Text.setText(players[1]);
 
 
-                playerTurn = savedValues.getString("playerTurn", "");
-                winComboCounter = savedValues.getInt("winComboCounter", 0);
-                playerWin = savedValues.getString("playerWin", "");
-                isCatsGame = savedValues.getString("isCatsGame", "");
+                    newJsonArray = new JSONArray(savedValues.getString("newJSONArray", ""));
+                    myButtons = new JSONArray(savedValues.getString("myButtons", ""));
+
+                    players = new String[2];
+                    players[0] = savedValues.getString("player1", "");
+                    players[1] = savedValues.getString("player2", "");
 
 
-                overallPlayerWinText = savedValues.getString("overallPlayerWinText", "");
-                numberOfGamesCounter = savedValues.getInt("numberOfGames", 0);
-                player1Wins = savedValues.getInt("player1Score", 0);
-                player2Wins = savedValues.getInt("player2Score", 0);
-
-                playerOverallWin.setText(overallPlayerWinText);
+                    playerTurn = savedValues.getString("playerTurn", "");
+                    winComboCounter = savedValues.getInt("winComboCounter", 0);
+                    playerWin = savedValues.getString("playerWin", "");
+                    isCatsGame = savedValues.getString("isCatsGame", "");
 
 
-                //show the winnings string on the page by calling the showWinningStrings function
-                showWinningStrings();
+                    overallPlayerWinText = savedValues.getString("overallPlayerWinText", "");
+                    numberOfGamesCounter = savedValues.getInt("numberOfGames", 0);
+                    player1Wins = savedValues.getInt("player1Score", 0);
+                    player2Wins = savedValues.getInt("player2Score", 0);
 
-
-                //If there has been no winner, go into the next persons turn
-                //if there has ben a winner set the text to the winner of the game
-                if (overallPlayerWinText != "") {
                     playerOverallWin.setText(overallPlayerWinText);
-                } else {
-                    playerOverallWin.setText(playerTurn + " Turn");
+
+
+                    //show the winnings string on the page by calling the showWinningStrings function
+                    showWinningStrings();
+
+
+                    //If there has been no winner, go into the next persons turn
+                    //if there has ben a winner set the text to the winner of the game
+                    if (overallPlayerWinText != "") {
+                        playerOverallWin.setText(overallPlayerWinText);
+                    } else {
+                        playerOverallWin.setText(playerTurn + " Turn");
+                    }
+
+
+                    Log.d("JSONArray", "JSON Array is " + newJsonArray);
+                    Log.d("JSONArray", "JSON Array is " + myButtons);
+                    //se the buttons to their corresponding texts (either X's or O's)
+                    displayButtonText();
                 }
-
-
-                Log.d("JSONArray", "JSON Array is " + newJsonArray);
-                Log.d("JSONArray", "JSON Array is " + myButtons);
-                //se the buttons to their corresponding texts (either X's or O's)
-                displayButtonText();
             } catch (JSONException e) {
 
             }
@@ -575,16 +596,68 @@ public class MainActivity extends AppCompatActivity {
                                     if(player1Wins > player2Wins){
 
                                         overallPlayerWinText = players[0] + " Wins The Game!";
+                                        try {
+                                            int wins = db.getPlayerWins(players[0].toLowerCase());
+                                            wins = wins + 1;
+                                            db.updatePlayerWins(wins,players[0].toLowerCase());
+
+
+                                            int losses =  db.getPlayerLosses(players[1].toLowerCase());
+                                            losses = losses + 1;
+                                            db.updatePlayerLosses(losses,players[1].toLowerCase());
+                                           // Log.d("DATABASE ADD PLAYER", "INSERTED NEW PLAYER");
+
+
+                                        }
+                                        catch(Exception e){
+                                            e.printStackTrace();
+                                        }
+
+
                                     }
                                     else if(player1Wins < player2Wins){
+                                        try {
+                                            int wins = db.getPlayerWins(players[1].toLowerCase());
+                                            wins = wins + 1;
+                                            db.updatePlayerWins(wins,players[1].toLowerCase());
 
+
+                                            int losses =  db.getPlayerLosses(players[0].toLowerCase());
+                                            losses = losses + 1;
+                                            db.updatePlayerLosses(losses,players[0].toLowerCase());
+                                            // Log.d("DATABASE ADD PLAYER", "INSERTED NEW PLAYER");
+
+
+                                        }
+                                        catch(Exception e){
+                                            e.printStackTrace();
+                                        }
                                         overallPlayerWinText = players[1] + " Wins The Game!";
                                     }
                                     else{
+                                        try {
+                                            int tiesP1 = db.getPlayerTies(players[0].toLowerCase());
+                                            tiesP1 = tiesP1 + 1;
+                                            db.updatePlayerTies(tiesP1,players[0].toLowerCase());
+
+
+                                            int tiesP2 =  db.getPlayerTies(players[1].toLowerCase());
+                                            tiesP2 = tiesP2 + 1;
+                                            db.updatePlayerTies(tiesP2,players[1].toLowerCase());
+                                            // Log.d("DATABASE ADD PLAYER", "INSERTED NEW PLAYER");
+
+
+                                        }
+                                        catch(Exception e){
+                                            e.printStackTrace();
+                                        }
+
                                         overallPlayerWinText = "ITS A TIE!";
                                     }
                                     //set the TextView to the overallPlayerWinText (whoever won the Game)
                                     playerOverallWin.setText(overallPlayerWinText);
+                                    showPopupMenu();
+
                                 }
                                 else{
                                     //if the number of rounds played is less than 3 then increment the number of rounds played by 1 and call newRound method and then startGame round
@@ -757,7 +830,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void newRound(){
 
-        //iterate througheach of the buttons and set their text to an empty string
+        //iterate through each of the buttons and set their text to an empty string
         for(int i = 1; i < 10; i++){
 
             String myButtonId = "btn" + i;
@@ -833,5 +906,54 @@ public class MainActivity extends AppCompatActivity {
 
         playerOverallWin.setText(playerTurn + " Turn");
     }
+
+
+    public void showPopupMenu(){
+        // custom dialog
+        final Dialog dialog = new Dialog(gameContext);
+        dialog.setContentView(R.layout.gamepopupwindow);
+        dialog.setTitle("Title...");
+
+        Button home = dialog.findViewById((R.id.homeButton));
+        Button newGame = dialog.findViewById((R.id.newGameButton));
+        Button scoreBoard = dialog.findViewById((R.id.scoreboardButton));
+
+        home.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changedPage = true;
+                dialog.dismiss();
+                Intent intent = new Intent(getBaseContext(), Main2Activity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        newGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //new game code
+                changedPage = true;
+                dialog.dismiss();
+                restartGame();
+                startGame();
+            }
+        });
+
+        scoreBoard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changedPage = true;
+                dialog.dismiss();
+                Intent intent = new Intent(getBaseContext(), Main5Activity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+
+        dialog.show();
+    }
+
 
 }

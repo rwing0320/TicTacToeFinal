@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,26 +15,27 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+public class Main4Activity extends AppCompatActivity {
 
-public class Main3Activity extends AppCompatActivity {
-
-    Spinner spinner1;
+    Spinner spinner2;
     private PlayerDB db;
 
-    String playerOneName = "";
+    String playerTwoName = "";
+    boolean chooseValid = false;
 
-    Button continueButton;
+    Button startGameButton;
     ImageButton backButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main3);
+        setContentView(R.layout.activity_main4);
 
         db = new PlayerDB(this);
 
@@ -41,44 +43,76 @@ public class Main3Activity extends AppCompatActivity {
         backButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                Intent intent = new Intent(getBaseContext(), Main2Activity.class);
+                Intent intent = new Intent(getBaseContext(), Main3Activity.class);
                 startActivity(intent);
             }
         });
 
-        continueButton = findViewById(R.id.startGame_button);
-        continueButton.setOnClickListener(new View.OnClickListener(){
+        final String playerOneName = getIntent().getStringExtra("player1Name");
+        Log.d("PLAYER ONE", "PLAYER ONE NAME: " + playerOneName);
+
+        startGameButton = findViewById(R.id.startGame_button);
+        startGameButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                Intent intent = new Intent(getBaseContext(), Main4Activity.class);
-                intent.putExtra("player1Name", playerOneName);
-                startActivity(intent);
+                if(chooseValid == true){
+                    Intent intent = new Intent(getBaseContext(), MainActivity.class);
+                    intent.putExtra("player1Name", playerOneName);
+                    intent.putExtra("player2Name", playerTwoName);
+                    startActivity(intent);
+
+                   
+                }
+                else{
+                    Context context = getApplicationContext();
+                    int duration = Toast.LENGTH_SHORT;
+
+                    String text = "PLEASE CHOOSE A VALID NAME!";
+                    //create a new toast which will display the winner of the round
+                    Toast toast = Toast.makeText(context, text, duration);
+                    toast.show();
+                }
             }
         });
 
-        spinner1 = findViewById(R.id.p2_spinner);
+        spinner2 = findViewById(R.id.p2_spinner);
         getAvailableNames();
-        spinner1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        spinner2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 // your code here
                 try {
                     Log.d("CHANGED NAME", "CHANGED NAME: " + parentView.getItemAtPosition(position).toString());
-                    playerOneName = parentView.getItemAtPosition(position).toString();
 
                     Context context = getApplicationContext();
                     int duration = Toast.LENGTH_SHORT;
 
 
 
-                    String text = "PLAYER ONE NAME SET";
+                    String text = "";
                     //create a new toast which will display the winner of the round
+
+
+                    if(playerOneName.equals(parentView.getItemAtPosition(position).toString())){
+                        text = parentView.getItemAtPosition(position).toString() + " HAS ALREADY BEEN TAKEN, PLEASE CHOOSE ANOTHER NAME";
+                        chooseValid = false;
+                    }
+                    else{
+                        text = "PLAYER TWO NAME SET";
+                        playerTwoName = parentView.getItemAtPosition(position).toString();
+                        chooseValid = true;
+                    }
+
                     Toast toast = Toast.makeText(context, text, duration);
                     toast.show();
 
                 }catch(Exception e){
                     Log.d("SPINNER ERROR", "SPINNER ERROR: " + e.toString());
                 }
+
+
+
+
             }
 
             @Override
@@ -88,10 +122,7 @@ public class Main3Activity extends AppCompatActivity {
 
         });
 
-
-        //onChangeSpinnerItemListener();
     }
-
 
     public void getAvailableNames(){
 
@@ -114,7 +145,7 @@ public class Main3Activity extends AppCompatActivity {
             ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
                     android.R.layout.simple_spinner_item, list);
             dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinner1.setAdapter(dataAdapter);
+            spinner2.setAdapter(dataAdapter);
 
         }
         catch(Exception e){

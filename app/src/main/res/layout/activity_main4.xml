@@ -9,15 +9,15 @@
     <ImageButton
         android:id="@+id/back_button"
         style="@style/Widget.AppCompat.ImageButton"
-        android:layout_width="70dp"
-        android:layout_height="66dp"
+        android:layout_width="71dp"
+        android:layout_height="67dp"
         android:background="@drawable/back_icon"
         app:layout_constraintBottom_toTopOf="@+id/guideline14"
         app:layout_constraintEnd_toStartOf="@+id/guideline12"
-        app:layout_constraintHorizontal_bias="0.049"
+        app:layout_constraintHorizontal_bias="0.075"
         app:layout_constraintStart_toStartOf="@+id/guideline11"
         app:layout_constraintTop_toTopOf="@+id/guideline13"
-        app:layout_constraintVertical_bias="0.027" />
+        app:layout_constraintVertical_bias="0.038" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline11"
@@ -64,7 +64,7 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="PLAYER ONE"
+        android:text="PLAYER TWO"
         android:textSize="30sp"
         app:layout_constraintBottom_toTopOf="@+id/guideline14"
         app:layout_constraintEnd_toStartOf="@+id/guideline12"
@@ -88,11 +88,12 @@
         android:id="@+id/startGame_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="CONTINUE"
+        android:text="START GAME"
         app:layout_constraintBottom_toTopOf="@+id/guideline14"
         app:layout_constraintEnd_toStartOf="@+id/guideline12"
         app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="@+id/guideline11"
         app:layout_constraintTop_toTopOf="@+id/guideline13"
         app:layout_constraintVertical_bias="0.466" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

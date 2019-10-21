@@ -5,4 +5,9 @@
     <string name="player1">Player 1</string>
     <string name="player2">Player 2</string>
     <string name="game">Game</string>
+    <string name="items_title">SCOREBOARD</string>
+    <string name="name_title">Name</string>
+    <string name="wins_title">Wins</string>
+    <string name="ties_title">Ties</string>
+    <string name="losses_title">Losses</string>
 </resources>
