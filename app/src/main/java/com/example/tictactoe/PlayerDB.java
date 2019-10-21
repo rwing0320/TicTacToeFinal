@@ -105,6 +105,22 @@ public class PlayerDB {
         return data;
     }
 
+    List<String> getPlayerNamesForDisplaying(){
+        List<String> playerNames = new ArrayList<String>();
+        openReadableDB();
+        Cursor cursor = db.rawQuery("SELECT name FROM players",null );
+        while (cursor.moveToNext()) {
+            //<String, String> map = new HashMap<String, String>();
+           // map.put("name", cursor.getString(0));
+            playerNames.add(cursor.getString(0));
+        }
+        if (cursor != null)
+            cursor.close();
+        closeDB();
+
+        return playerNames;
+    }
+
 
     String getPlayer(){
         ArrayList<HashMap<String, String>> data =
@@ -121,6 +137,31 @@ public class PlayerDB {
         closeDB();
 
         return name;
+    }
+
+    String[] getPlayerStats(String name){
+        //ArrayList<HashMap<String, String>> data =
+                //new ArrayList<HashMap<String, String>>();
+        //String name = "";
+        String[] playerStats = new String[4];
+
+        openReadableDB();
+        Cursor cursor = db.rawQuery("SELECT name, wins, losses, ties FROM players WHERE name == '" + name + "'",null );
+        while (cursor.moveToNext()) {
+
+
+            playerStats[0] = cursor.getString(0);
+            playerStats[1] = cursor.getString(1);
+            playerStats[2] = cursor.getString(2);
+            playerStats[3] = cursor.getString(3);
+
+
+        }
+        if (cursor != null)
+            cursor.close();
+        closeDB();
+
+        return playerStats;
     }
 
     int getPlayerWins(String name){
@@ -244,6 +285,14 @@ public class PlayerDB {
         ContentValues content = new ContentValues();
         content.put("ties", ties);
         db.update("players", content, "name = '" + name + "'", null);
+        closeDB();
+    }
+
+    void deleteUser(String name){
+        openWriteableDB();
+        //ContentValues content = new ContentValues();
+        //content.put("ties", ties);
+        db.delete("players", "name = '" + name + "'", null);
         closeDB();
     }
 }
